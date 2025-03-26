@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 
 #include "udp.h"
+#include "crypt.h"
 
 #define PORT 8080
 
@@ -53,11 +54,15 @@ int main()
 	// -------------------------------------------------
 
 	char message[MAXLINE] = "Good Morning Bob!";
+	printf("Plain:\n%s\n", message);
+	encrypt_ceasar(message);
 	udp_send(sockfd, (char *)message, (struct sockaddr *)&cliaddr);
 	printf("Sent:\n%s\n", message);
 
 	udp_receive(sockfd, (char *)buffer, (struct sockaddr *)&cliaddr);
 	printf("Receive:\n%s\n", buffer);
+	decrypt_ceasar(buffer);
+	printf("Plain:\n%s\n", buffer);
 
 	return 0;
 }
