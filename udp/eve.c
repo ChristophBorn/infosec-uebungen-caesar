@@ -9,12 +9,36 @@
 #include <pcap.h>
 
 #include "packet-headers.h"
+#include "crypt.h"
 
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 
 #define NETIF "enp0s8"
 #define PORT 8080
+
+void crack_encrypt(char* text) {
+	/* Allocate buffer to operate on */
+	char *tmp = malloc(strlen(text) + 1);
+	if (tmp == NULL) {
+		printf("Couldn't allocate memory to hold brute force result!");
+		return;
+	}
+
+	/* Brute force: decrypt using every possible offset */
+	for(int i = 1; i < 26; i++) {
+		// Reset buffer
+		strcpy(tmp, text);
+
+		// Decrypt
+		rot(tmp, -i);
+
+		printf("Possible clear text (offset=%02d): %s\n", i, tmp);
+	}
+
+	/* Clear buffer */
+	free(tmp);
+}
 
 void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
 	const struct sniff_ethernet *ethernet; /* The ethernet header */
@@ -71,7 +95,13 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pa
 
 	copy[size_payload - 1] = '\0'; // ensure 0-terminated string
 	
+	/* process payload */
 	printf("Got message: %s\n", copy);
+
+	crack_encrypt(copy);
+
+	/* clear memory */
+	free(copy);
 }
 
 int main(int argc, char *argv[])
